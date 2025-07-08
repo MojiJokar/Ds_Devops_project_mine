@@ -109,3 +109,41 @@ variable "backend_memory" {
   type        = number
   default     = 1024
 }
+# variable "ec2_ami_id" {
+#   type        = string
+#   description = "DevOps Project 1 AMI Id for EC2 instance"
+# }
+
+# variable "eu_availability_zone" {
+#   type        = list(string)
+#   description = "Availability Zones"
+# }
+
+# variable "public_key" {
+#   type        = string
+#   description = "DevOps Project 1 Public key for EC2 instance"
+#}
+
+# variable "vpc_name" {
+#   type        = string
+#   description = "DevOps Project 1 VPC 1"
+# }
+
+# variable "bucket_name" {
+#   type        = string
+#   description = "Remote state bucket name"
+# }
+
+# variable "name" {
+#   type        = string
+#   description = "Tag name"
+# }
+variable "public_key" {
+  type        = string
+  description = "DevOps Project 1 Public key for EC2 instance"
+}
+
+#variable "ec2_ami_id" {
+  #type        = string
+ # description = "DevOps Project 1 AMI Id for EC2 instance"
+#}

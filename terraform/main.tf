@@ -3,6 +3,7 @@
 # AWS Provider Configuration
 provider "aws" {
   region = var.aws_region
+  shared_credentials_files = ["/mnt/c/Users/mmb20/.aws/credentials"]
   default_tags {
     tags = var.default_tags
   }
@@ -31,7 +32,7 @@ module "networking" {
 }
 
 # ECR Module - Creates repositories for Docker images
-module "ecr" {
+/*module "ecr" {
   source = "./modules/ecr"
   
   environment = var.environment
@@ -39,10 +40,10 @@ module "ecr" {
     "frontend",
     "backend"
   ]
-}
+}*/
 
 # RDS Module - Creates PostgreSQL database
-module "rds" {
+/*module "rds" {
   source = "./modules/rds"
   
   environment        = var.environment
@@ -52,17 +53,18 @@ module "rds" {
   db_username        = var.db_username
   db_password        = var.db_password
   db_instance_class  = var.db_instance_class
-}
+  skip_final_snapshot = true
+}*/
 
 # IAM Module - Creates IAM roles and policies
-module "iam" {
+/*module "iam" {
   source = "./modules/iam"
   
   environment = var.environment
-}
+}*/
 
 # ECS Module - Creates ECS cluster and services
-module "ecs" {
+/*module "ecs" {
   source = "./modules/ecs_service"
   
   environment        = var.environment
@@ -78,6 +80,6 @@ module "ecs" {
   db_name            = var.db_name
   db_username        = var.db_username
   db_password        = var.db_password
-}
+}*/
 
 # AWS credentials will be provided through environment variables or AWS CLI configuration

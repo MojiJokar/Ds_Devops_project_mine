@@ -1,5 +1,7 @@
 # DS_DevOps_project - Networking Module Variables
 
+//variable "vpc_cidr" {}
+
 variable "vpc_cidr" {
   description = "CIDR block for the VPC"
   type        = string
