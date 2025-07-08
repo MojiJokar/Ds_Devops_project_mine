@@ -53,6 +53,7 @@ resource "aws_db_instance" "main" {
   backup_window          = "03:00-04:00"
   maintenance_window     = "Mon:04:00-Mon:05:00"
   deletion_protection    = var.environment == "prod" ? true : false
+ 
 
   tags = {
     Name        = "${var.environment}-db"

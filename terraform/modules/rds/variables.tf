@@ -36,3 +36,8 @@ variable "db_instance_class" {
   type        = string
   default     = "db.t3.micro"
 }
+variable "skip_final_snapshot" {
+  type        = bool
+  description = "Whether to skip the final DB snapshot before deletion"
+  default     = false
+}

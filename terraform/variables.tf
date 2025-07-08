@@ -147,3 +147,8 @@ variable "public_key" {
   #type        = string
  # description = "DevOps Project 1 AMI Id for EC2 instance"
 #}
+variable "skip_final_snapshot" {
+  type        = bool
+  description = "Whether to skip the final DB snapshot before deletion"
+  default     = false
+}
