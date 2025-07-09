@@ -119,10 +119,10 @@ variable "backend_memory" {
 #   description = "Availability Zones"
 # }
 
-# variable "public_key" {
-#   type        = string
-#   description = "DevOps Project 1 Public key for EC2 instance"
-#}
+variable "public_key" {
+   type        = string
+   description = "DevOps Project 1 Public key for EC2 instance"
+}
 
 # variable "vpc_name" {
 #   type        = string
@@ -138,15 +138,11 @@ variable "backend_memory" {
 #   type        = string
 #   description = "Tag name"
 # }
-variable "public_key" {
-  type        = string
-  description = "DevOps Project 1 Public key for EC2 instance"
-}
 
-#variable "ec2_ami_id" {
-  #type        = string
- # description = "DevOps Project 1 AMI Id for EC2 instance"
-#}
+variable "ec2_ami_id" {
+  type        = string
+  description = "DevOps Project 1 AMI Id for EC2 instance"
+}
 variable "skip_final_snapshot" {
   type        = bool
   description = "Whether to skip the final DB snapshot before deletion"

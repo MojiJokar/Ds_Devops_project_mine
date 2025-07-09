@@ -31,55 +31,9 @@ module "networking" {
   private_subnet_cidrs = var.private_subnet_cidrs
 }
 
-# ECR Module - Creates repositories for Docker images
-module "ecr" {
-  source = "./modules/ecr"
-  
-  environment = var.environment
-  repositories = [
-    "frontend",
-    "backend"
-  ]
+module "security_group" {
+  source              = "./modules/security-groups"
+  ec2_sg_name         = "SG for EC2 to enable SSH(22), HTTPS(443) and HTTP(80)"
+  vpc_id              = module.networking.vpc_id
+  ec2_jenkins_sg_name = "Allow port 8080 for jenkins"
 }
-
-# RDS Module - Creates PostgreSQL database
-module "rds" {
-  source = "./modules/rds"
-  
-  environment        = var.environment
-  subnet_ids         = module.networking.private_subnet_ids
-  vpc_security_group_ids = [module.networking.db_security_group_id]
-  db_name            = var.db_name
-  db_username        = var.db_username
-  db_password        = var.db_password
-  db_instance_class  = var.db_instance_class
-  skip_final_snapshot = var.skip_final_snapshot
-}
-
-# IAM Module - Creates IAM roles and policies
-module "iam" {
-  source = "./modules/iam"
-  
-  environment = var.environment
-}
-
-# ECS Module - Creates ECS cluster and services
-module "ecs" {
-  source = "./modules/ecs_service"
-  
-  environment        = var.environment
-  vpc_id             = module.networking.vpc_id
-  subnet_ids         = module.networking.private_subnet_ids
-  alb_subnet_ids     = module.networking.public_subnet_ids
-  ecs_security_group_id = module.networking.ecs_security_group_id
-  alb_security_group_id = module.networking.alb_security_group_id
-  ecs_task_execution_role_arn = module.iam.ecs_task_execution_role_arn
-  frontend_image_url = "${module.ecr.repository_urls["frontend"]}:latest"
-  backend_image_url  = "${module.ecr.repository_urls["backend"]}:latest"
-  db_endpoint        = module.rds.db_endpoint
-  db_name            = var.db_name
-  db_username        = var.db_username
-  db_password        = var.db_password
-}
-
-# AWS credentials will be provided through environment variables or AWS CLI configuration

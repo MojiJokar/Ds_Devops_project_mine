@@ -1,7 +1,7 @@
 # DS_DevOps_project - Networking Module
 
 # Create VPC
-resource "aws_vpc" "main" {
+resource "aws_vpc" "main_vpc" {
   cidr_block           = var.vpc_cidr
   enable_dns_support   = true
   enable_dns_hostnames = true
@@ -12,20 +12,10 @@ resource "aws_vpc" "main" {
   }
 }
 
-# Create Internet Gateway
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name        = "${var.environment}-igw"
-    Environment = var.environment
-  }
-}
-
 # Create Public Subnets
-resource "aws_subnet" "public" {
+resource "aws_subnet" "public_subnet" {
   count                   = length(var.public_subnet_cidrs)
-  vpc_id                  = aws_vpc.main.id
+  vpc_id                  = aws_vpc.main_vpc.id
   cidr_block              = var.public_subnet_cidrs[count.index]
   availability_zone       = var.availability_zones[count.index]
   map_public_ip_on_launch = true
@@ -37,9 +27,9 @@ resource "aws_subnet" "public" {
 }
 
 # Create Private Subnets
-resource "aws_subnet" "private" {
+resource "aws_subnet" "private_subnet" {
   count             = length(var.private_subnet_cidrs)
-  vpc_id            = aws_vpc.main.id
+  vpc_id            = aws_vpc.main_vpc.id
   cidr_block        = var.private_subnet_cidrs[count.index]
   availability_zone = var.availability_zones[count.index]
 
@@ -49,35 +39,23 @@ resource "aws_subnet" "private" {
   }
 }
 
-# Create NAT Gateway for private subnets
-resource "aws_eip" "nat" {
-  domain = "vpc"
+# Create Internet Gateway
+resource "aws_internet_gateway" "main_internet_gateway" {
+  vpc_id = aws_vpc.main_vpc.id
 
   tags = {
-    Name        = "${var.environment}-nat-eip"
+    Name        = "${var.environment}-igw"
     Environment = var.environment
   }
 }
 
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public[0].id
-
-  tags = {
-    Name        = "${var.environment}-nat-gw"
-    Environment = var.environment
-  }
-
-  depends_on = [aws_internet_gateway.main]
-}
-
-# Create Route Tables
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
+# Public Route Tables
+resource "aws_route_table" "public_route_table" {
+  vpc_id = aws_vpc.main_vpc.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
+    gateway_id = aws_internet_gateway.main_internet_gateway.id
   }
 
   tags = {
@@ -86,13 +64,18 @@ resource "aws_route_table" "public" {
   }
 }
 
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
+# Associate Route Tables with Subnets
+resource "aws_route_table_association" "public_rt_association" {
+  count          = length(aws_subnet.public_subnet)
+  #count         = length(var.public_subnet_cidrs)
+  #subnet_id     = aws_subnet._subnet[count.index].id
+  subnet_id      = aws_subnet.public_subnet[count.index].id
+  route_table_id = aws_route_table.public_route_table.id
+}
 
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
-  }
+#Private route table
+resource "aws_route_table" "private_subnet" {
+  vpc_id = aws_vpc.main_vpc.id
 
   tags = {
     Name        = "${var.environment}-private-rt"
@@ -100,109 +83,12 @@ resource "aws_route_table" "private" {
   }
 }
 
-# Associate Route Tables with Subnets
-resource "aws_route_table_association" "public" {
-  count          = length(var.public_subnet_cidrs)
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
-}
 
-resource "aws_route_table_association" "private" {
-  count          = length(var.private_subnet_cidrs)
-  subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private.id
-}
-
-# Create Security Groups
-
-# ALB Security Group
-resource "aws_security_group" "alb" {
-  name        = "${var.environment}-alb-sg"
-  description = "Security group for the Application Load Balancer"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTP traffic"
-  }
-
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow HTTPS traffic"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
-  }
-
-  tags = {
-    Name        = "${var.environment}-alb-sg"
-    Environment = var.environment
-  }
-}
-
-# ECS Security Group
-resource "aws_security_group" "ecs" {
-  name        = "${var.environment}-ecs-sg"
-  description = "Security group for the ECS services"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port       = 0
-    to_port         = 0
-    protocol        = "-1"
-    security_groups = [aws_security_group.alb.id]
-    description     = "Allow all traffic from ALB"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
-  }
-
-  tags = {
-    Name        = "${var.environment}-ecs-sg"
-    Environment = var.environment
-  }
-}
-
-# Database Security Group
-resource "aws_security_group" "db" {
-  name        = "${var.environment}-db-sg"
-  description = "Security group for the RDS instance"
-  vpc_id      = aws_vpc.main.id
-
-  ingress {
-    from_port       = 5432
-    to_port         = 5432
-    protocol        = "tcp"
-    security_groups = [aws_security_group.ecs.id]
-    description     = "Allow PostgreSQL traffic from ECS"
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-    description = "Allow all outbound traffic"
-  }
-
-  tags = {
-    Name        = "${var.environment}-db-sg"
-    Environment = var.environment
-  }
+resource "aws_route_table_association" "private_rt_association" {
+  #count          = length(var.private_subnet_cidrs)
+  #subnet_id      = aws_subnet.private[count.index].id
+  #route_table_id = aws_route_table.private_route_table.id
+  count          = length(aws_subnet.private_subnet)
+  subnet_id      = aws_subnet.private_subnet[count.index].id
+  route_table_id = aws_route_table.private_subnet.id
 }
