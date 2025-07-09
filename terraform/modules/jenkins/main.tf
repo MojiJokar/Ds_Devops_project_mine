@@ -9,16 +9,16 @@ variable "user_data_install_jenkins" {}
 
 output "ssh_connection_string_for_ec2" {
   value = format(
-    "ssh -i /home/moji/keys/ds_devops_project_keypair.pem ubuntu@%s",
-    aws_instance.nginx.public_ip
+    "ssh -i /Users/mmb20/.ssh/ds_devops_keys ubuntu@%s",
+    aws_instance.jenkins_ec2_instance_ip.public_ip
   )
 }
 
-output "jenkins_ec2_instance_ip" {
+output "jenkins_ec2_instance_id" {
   value = aws_instance.jenkins_ec2_instance_ip.id
 }
 
-output "dev_proj_1_ec2_instance_public_ip" {
+output "jenkins_ec2_instance_public_ip" {
   value = aws_instance.jenkins_ec2_instance_ip.public_ip
 }
 
@@ -28,7 +28,7 @@ resource "aws_instance" "jenkins_ec2_instance_ip" {
   tags = {
     Name = var.tag_name
   }
-  key_name                    = "aws_ec2_terraform"
+  key_name                    = "ds_devops_keys"
   subnet_id                   = var.subnet_id
   vpc_security_group_ids      = var.sg_for_jenkins
   associate_public_ip_address = var.enable_public_ip_address
@@ -36,12 +36,12 @@ resource "aws_instance" "jenkins_ec2_instance_ip" {
   user_data = var.user_data_install_jenkins
 
   metadata_options {
-    http_endpoint = "enabled"  # Enable the IMDSv2 endpoint
-    http_tokens   = "required" # Require the use of IMDSv2 tokens
+    http_endpoint = "enabled"
+    http_tokens   = "required"
   }
 }
 
 resource "aws_key_pair" "jenkins_ec2_instance_public_key" {
-  key_name   = "aws_ec2_terraform"
+  key_name   = "ds_devops_keys"
   public_key = var.public_key
 }
