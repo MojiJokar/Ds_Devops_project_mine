@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -170,3 +171,6 @@ async def get_api_status():
             "rag_service": "available" if rag_service.scenarios_indexed else "initializing"
         }
     }
+=======
+from fastapi import FastAPI\n\napp = FastAPI()\n\n@app.get('/')\nasync def read_root():\n    return {'message': 'OpenSCENARIO API is running'}
+>>>>>>> origin/main

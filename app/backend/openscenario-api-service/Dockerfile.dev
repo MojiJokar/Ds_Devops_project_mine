@@ -11,6 +11,7 @@ ENV PYTHONDUNBUFFERED=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
+<<<<<<< HEAD
     git \
     && rm -rf /var/lib/apt/lists/*
 
@@ -20,11 +21,27 @@ RUN pip install --no-cache-dir -r requirements-minimal.txt
 
 # Install additional validation libraries
 RUN pip install --no-cache-dir xmlschema==3.0.1
+=======
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python dependencies
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Install development dependencies
+COPY requirements-dev.txt .
+RUN pip install --no-cache-dir -r requirements-dev.txt
+>>>>>>> origin/main
 
 # Copy the application code
 COPY . .
 
 # Set environment variables
+<<<<<<< HEAD
+=======
+ENV VALIDATOR_PATH=/app/validator/OpenSCENARIOValidator
+ENV LD_LIBRARY_PATH=/app/validator
+>>>>>>> origin/main
 ENV PORT=8080
 ENV LOG_LEVEL=DEBUG
 

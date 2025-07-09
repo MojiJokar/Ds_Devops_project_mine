@@ -13,7 +13,11 @@ services:
       - /app/node_modules
     environment:
       - NODE_ENV=development
+<<<<<<< HEAD
       - VITE_API_URL=http://localhost:8080
+=======
+      - VITE_API_URL=http://localhost:8080/api
+>>>>>>> origin/main
     depends_on:
       - backend
     networks:
@@ -30,7 +34,10 @@ services:
       - ./app/backend/openscenario-api-service:/app
       - /app/venv
       - ./data/validator:/app/validator
+<<<<<<< HEAD
       - ./data/ncap_data:/app/ncap_data
+=======
+>>>>>>> origin/main
     environment:
       - VALIDATOR_PATH=/app/validator/OpenSCENARIOValidator
       - LD_LIBRARY_PATH=/app/validator
@@ -38,9 +45,12 @@ services:
       - LOG_LEVEL=DEBUG
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
+<<<<<<< HEAD
       - OPENAI_API_KEY=${OPENAI_API_KEY:-your-openai-api-key-here}
       - RAG_DATA_DIR=/app/ncap_data
       - EMBEDDING_MODEL=all-MiniLM-L6-v2
+=======
+>>>>>>> origin/main
     command: >
       sh -c "uvicorn main:app --reload --host 0.0.0.0 --port 8080"
     networks:

@@ -1,6 +1,7 @@
 fastapi==0.109.2
 uvicorn==0.27.1
 python-multipart==0.0.9
+<<<<<<< HEAD
 pydantic>=2.6.0
 openai>=1.12.0
 instructor>=0.6.0,<1.0.0
@@ -15,3 +16,6 @@ lxml==4.9.3
 scenariogeneration==0.14.0
 --extra-index-url https://download.pytorch.org/whl/cpu
 torch==2.7.1+cpu
+=======
+pydantic==2.6.3
+>>>>>>> origin/main
