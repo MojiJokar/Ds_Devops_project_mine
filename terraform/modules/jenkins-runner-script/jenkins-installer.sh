@@ -8,12 +8,9 @@ sudo apt-get update
 # Install Java 17 (required for recent Jenkins versions)
 sudo apt-get install -y openjdk-17-jdk
 
-echo "Waiting for 30 seconds after Jenkins install..."
-sleep 30
-
+# Start and enable Jenkins service
 sudo systemctl start jenkins
 sudo systemctl enable jenkins
-
 
 # Optionally, set JAVA_HOME for Jenkins
 echo "JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64" | sudo tee -a /etc/default/jenkins
@@ -35,12 +32,17 @@ sudo apt-get install -y jenkins
 echo "Waiting for 30 seconds after Jenkins install..."
 sleep 30
 
-# Install Terraform (optional)
-TERRAFORM_VERSION="1.6.5"
-wget https://releases.hashicorp.com/terraform/${TERRAFORM_VERSION}/terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-sudo apt-get install -y unzip
-unzip terraform_${TERRAFORM_VERSION}_linux_amd64.zip
-sudo mv terraform /usr/local/bin/
-rm terraform_${TERRAFORM_VERSION}_linux_amd64.zip
+# --- Install Terraform ---
+sudo apt-get update && sudo apt-get install -y gnupg software-properties-common curl
+curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
+echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | sudo tee /etc/apt/sources.list.d/hashicorp.list
+sudo apt-get update && sudo apt-get install -y terraform
+
+# --- Install kubectl ---
+sudo apt-get update && sudo apt-get install -y apt-transport-https ca-certificates curl
+sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+sudo apt-get update
+sudo apt-get install -y kubectl
 
 echo "Installation complete!"

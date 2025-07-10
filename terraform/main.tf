@@ -2,10 +2,26 @@
 
 # AWS Provider Configuration
 provider "aws" {
-  region = var.aws_region
+  region                   = var.aws_region
   shared_credentials_files = ["/mnt/c/Users/mmb20/.aws/credentials"]
   default_tags {
     tags = var.default_tags
+  }
+}
+
+# Lookup the latest Amazon Linux 2 AMI in Paris (eu-west-3)
+data "aws_ami" "latest_amazon_linux2_paris" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
   }
 }
 
@@ -23,7 +39,7 @@ provider "aws" {
 # Networking Module - Creates VPC, Subnets, Internet Gateway, NAT Gateway, Route Tables
 module "networking" {
   source = "./modules/networking"
-  
+
   vpc_cidr             = var.vpc_cidr
   environment          = var.environment
   availability_zones   = var.availability_zones
@@ -40,8 +56,8 @@ module "security_group" {
 
 module "jenkins" {
   source                    = "./modules/jenkins"
-  ami_id                    = var.ec2_ami_id
-  instance_type             = "t2.medium" 
+  ami_id                    = data.aws_ami.latest_amazon_linux2_paris.id   
+  instance_type             = "t2.medium"
   tag_name                  = "Jenkins:Ubuntu Linux EC2"
   public_key                = var.public_key
   subnet_id                 = tolist(module.networking.public_subnet)[0]
@@ -74,11 +90,12 @@ module "alb" {
   lb_listner_default_action = "forward"
   lb_https_listner_port     = 443
   lb_https_listner_protocol = "HTTPS"
-  // ds_devops_project_acm_arn        = module.aws_ceritification_manager.ds_devops_project_acm_arn
+  # ds_devops_project_acm_arn        = module.aws_ceritification_manager.ds_devops_project_acm_arn
   lb_target_group_attachment_port = 8080
 }
 
-/*module "hosted_zone" {
+/*
+module "hosted_zone" {
   source          = "./modules/hosted-zone"
   domain_name     = "jenkins.jhooq.org"
   aws_lb_dns_name = module.alb.aws_lb_dns_name
@@ -89,10 +106,24 @@ module "aws_ceritification_manager" {
   source         = "./modules/certificate-manager"
   domain_name    = "jenkins.jhooq.org"
   hosted_zone_id = module.hosted_zone.hosted_zone_id
-}*/
+}
+*/
 
+# RDS Module - Creates PostgreSQL database
+module "rds" {
+  source = "./modules/rds"
 
+  environment           = var.environment
+  subnet_ids            = module.networking.private_subnet_ids
+  vpc_security_group_ids = [module.networking.db_security_group_id]
+  db_name               = var.db_name
+  db_username           = var.db_username
+  db_password           = var.db_password
+  db_instance_class     = var.db_instance_class
+  skip_final_snapshot   = var.skip_final_snapshot
+}
 
+/*
 module "eks" {
     source  = "./modules/terraform-aws-modules/eks/aws"
     version = "~> 19.0"
@@ -119,3 +150,4 @@ module "eks" {
         }
     }
 }
+*/
