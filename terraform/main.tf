@@ -56,24 +56,66 @@ module "lb_target_group" {
   lb_target_group_port     = 8080
   lb_target_group_protocol = "HTTP"
   vpc_id                   = module.networking.vpc_id
-  ec2_instance_id          = module.jenkins.jenkins_ec2_instance_id
+  ec2_instance_id          = module.jenkins.jenkins_ec2_instance_ip
 }
 
 module "alb" {
-  source                    = "./load-balancer"
-  lb_name                   = "dev-proj-1-alb"
+  source                    = "./modules/load-balancer"
+  lb_name                   = "ds-devops-project-alb"
   is_external               = false
   lb_type                   = "application"
   sg_enable_ssh_https       = module.security_group.sg_ec2_sg_ssh_http_id
-  subnet_ids                = tolist(module.networking.dev_proj_1_public_subnets)
-  tag_name                  = "dev-proj-1-alb"
-  lb_target_group_arn       = module.lb_target_group.dev_proj_1_lb_target_group_arn
+  subnet_ids                = tolist(module.networking.public_subnet)
+  tag_name                  = "ds_devops_project-alb"
+  lb_target_group_arn       = module.lb_target_group.ds_devops_project_lb_target_group_arn
   ec2_instance_id           = module.jenkins.jenkins_ec2_instance_ip
   lb_listner_port           = 80
   lb_listner_protocol       = "HTTP"
   lb_listner_default_action = "forward"
   lb_https_listner_port     = 443
   lb_https_listner_protocol = "HTTPS"
-  dev_proj_1_acm_arn        = module.aws_ceritification_manager.dev_proj_1_acm_arn
+  // ds_devops_project_acm_arn        = module.aws_ceritification_manager.ds_devops_project_acm_arn
   lb_target_group_attachment_port = 8080
+}
+
+/*module "hosted_zone" {
+  source          = "./modules/hosted-zone"
+  domain_name     = "jenkins.jhooq.org"
+  aws_lb_dns_name = module.alb.aws_lb_dns_name
+  aws_lb_zone_id  = module.alb.aws_lb_zone_id
+}
+
+module "aws_ceritification_manager" {
+  source         = "./modules/certificate-manager"
+  domain_name    = "jenkins.jhooq.org"
+  hosted_zone_id = module.hosted_zone.hosted_zone_id
+}*/
+
+
+
+module "eks" {
+    source  = "./modules/terraform-aws-modules/eks/aws"
+    version = "~> 19.0"
+    cluster_name = "myapp-eks-cluster"
+    cluster_version = "1.24"
+
+    cluster_endpoint_public_access  = true
+
+    vpc_id = module.myapp-vpc.vpc_id
+    subnet_ids = module.myapp-vpc.private_subnets
+
+    tags = {
+        environment = "development"
+        application = "myapp"
+    }
+
+    eks_managed_node_groups = {
+        dev = {
+            min_size = 1
+            max_size = 3
+            desired_size = 2
+
+            instance_types = ["t2.small"]
+        }
+    }
 }

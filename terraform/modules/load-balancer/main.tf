@@ -11,8 +11,13 @@ variable "lb_listner_protocol" {}
 variable "lb_listner_default_action" {}
 variable "lb_https_listner_port" {}
 variable "lb_https_listner_protocol" {}
-variable "ds_devops_project_acm_arn" {}
 variable "lb_target_group_attachment_port" {}
+variable "ds_devops_project_acm_arn" {
+  description = "The ARN of the ACM certificate for HTTPS listener"
+  type        = string
+  default     = ""
+}
+
 
 output "aws_lb_dns_name" {
   value = aws_lb.ds_devops_project_lb.dns_name
