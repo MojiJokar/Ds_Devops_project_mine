@@ -25,16 +25,6 @@ data "aws_ami" "latest_amazon_linux2_paris" {
   }
 }
 
-# Terraform Backend Configuration (Uncomment and configure when ready for production)
-# terraform {
-#   backend "s3" {
-#     bucket         = "ds-devops-project-terraform-state"
-#     key            = "terraform.tfstate"
-#     region         = "eu-west-3"
-#     dynamodb_table = "ds-devops-terraform-locks"
-#     encrypt        = true
-#   }
-# }
 
 # Networking Module - Creates VPC, Subnets, Internet Gateway, NAT Gateway, Route Tables
 module "networking" {
@@ -47,7 +37,7 @@ module "networking" {
   private_subnet_cidrs = var.private_subnet_cidrs
 }
 
-module "security_group" {
+/*module "security_group" {
   source              = "./modules/security-groups"
   ec2_sg_name         = "SG for EC2 to enable SSH(22), HTTPS(443) and HTTP(80)"
   vpc_id              = module.networking.vpc_id
@@ -110,7 +100,7 @@ module "aws_ceritification_manager" {
 */
 
 # RDS Module - Creates PostgreSQL database
-module "rds" {
+/*module "rds" {
   source = "./modules/rds"
 
   environment           = var.environment
@@ -123,31 +113,41 @@ module "rds" {
   skip_final_snapshot   = var.skip_final_snapshot
 }
 
+
+# Terraform Backend Configuration (Uncomment and configure when ready for production)
+# terraform {
+#   backend "s3" {
+#     bucket         = "ds-devops-project-terraform-state"
+#     key            = "terraform.tfstate"
+#     region         = "eu-west-3"
+#     dynamodb_table = "ds-devops-terraform-locks"
+#     encrypt        = true
+#   }
+# }
+
+
+
+
 /*
 module "eks" {
-    source  = "./modules/terraform-aws-modules/eks/aws"
-    version = "~> 19.0"
-    cluster_name = "myapp-eks-cluster"
-    cluster_version = "1.24"
-
-    cluster_endpoint_public_access  = true
-
-    vpc_id = module.myapp-vpc.vpc_id
-    subnet_ids = module.myapp-vpc.private_subnets
-
-    tags = {
-        environment = "development"
-        application = "myapp"
+  source                        = "./modules/terraform-aws-modules/eks/aws"
+  version                       = "~> 19.0"
+  cluster_name                  = "myapp-eks-cluster"
+  cluster_version               = "1.24"
+  cluster_endpoint_public_access = true
+  vpc_id                        = module.networking.vpc_id
+  subnet_ids                    = module.networking.private_subnets
+  tags = {
+    environment = "development"
+    application = "myapp"
+  }
+  eks_managed_node_groups = {
+    dev = {
+      min_size     = 1
+      max_size     = 3
+      desired_size = 2
+      instance_types = ["t2.small"]
     }
-
-    eks_managed_node_groups = {
-        dev = {
-            min_size = 1
-            max_size = 3
-            desired_size = 2
-
-            instance_types = ["t2.small"]
-        }
-    }
+  }
 }
 */
