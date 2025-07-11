@@ -1,7 +1,7 @@
 # DS_DevOps_project - Terraform Outputs
 
 # Networking Outputs
-/*output "vpc_id" {
+output "vpc_id" {
   description = "ID of the VPC"
   value       = module.networking.vpc_id
 }
@@ -14,7 +14,7 @@ output "public_subnet_ids" {
 output "private_subnet_ids" {
   description = "IDs of the private subnets"
   value       = module.networking.private_subnet_ids
-}*/
+}
 
 # ECR Outputs (Uncomment when ECR module is enabled)
 # output "ecr_repository_urls" {
