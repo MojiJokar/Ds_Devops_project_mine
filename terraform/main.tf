@@ -9,22 +9,6 @@ provider "aws" {
   }
 }
 
-# Lookup the latest Amazon Linux 2 AMI in Paris (eu-west-3)
-data "aws_ami" "latest_amazon_linux2_paris" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
-  }
-
-  filter {
-    name   = "virtualization-type"
-    values = ["hvm"]
-  }
-}
-
 
 # Networking Module - Creates VPC, Subnets, Internet Gateway, NAT Gateway, Route Tables
 module "networking" {
@@ -37,7 +21,7 @@ module "networking" {
   private_subnet_cidrs = var.private_subnet_cidrs
 }
 
-/*module "security_group" {
+module "security_group" {
   source              = "./modules/security-groups"
   ec2_sg_name         = "SG for EC2 to enable SSH(22), HTTPS(443) and HTTP(80)"
   vpc_id              = module.networking.vpc_id
@@ -46,17 +30,37 @@ module "networking" {
 
 module "jenkins" {
   source                    = "./modules/jenkins"
-  ami_id                    = data.aws_ami.latest_amazon_linux2_paris.id   
+  ami_id                    = var.ec2_ami_id 
   instance_type             = "t2.medium"
   tag_name                  = "Jenkins:Ubuntu Linux EC2"
   public_key                = var.public_key
   subnet_id                 = tolist(module.networking.public_subnet)[0]
   sg_for_jenkins            = [module.security_group.sg_ec2_sg_ssh_http_id, module.security_group.sg_ec2_jenkins_port_8080]
   enable_public_ip_address  = true
-  user_data_install_jenkins = templatefile("./modules/jenkins-runner-script/jenkins-installer.sh", {})
+  user_data_install_jenkins = file("./modules/jenkins-runner-script/jenkins-install.sh")
+
 }
 
-module "lb_target_group" {
+
+# Lookup the latest Amazon Linux 2 AMI in Paris (eu-west-3)
+/*data "aws_ami" "latest_amazon_linux2_paris" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}*/
+
+
+
+/*module "lb_target_group" {
   source                   = "./modules/load-balancer-target-group"
   lb_target_group_name     = "jenkins-lb-target-group"
   lb_target_group_port     = 8080

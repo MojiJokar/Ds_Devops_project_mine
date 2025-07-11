@@ -35,7 +35,8 @@ backend_cpu             = 512
 backend_memory          = 1024
 
 #domain_name = "http://localhost:3000/ "
-ec2_ami_id     = "ami-04ec97dc75ac850b1"
+ec2_ami_id = "ami-007c433663055a1cc"
+
 public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDE6jT41I6TzwN2U5tl/21n+4CpvGn7nXLhvf8iyz4sf1Th0ot+bxdzbXgB15MGWgASmMUMFU4ssbCzw2ZN6/I4HCn8PyTWTL6HNfXgMsxipqjtJm3KCIm5/hVjmUz9XXBgiTdf+K+GHgkOUA3P0kRLBGC0JVYd9ItGynwHxFnBPy/9yxU8l3iLFVSpHdd1GXqiZn+xk+Nk0e4Fegt7t0fpFVF5Ot9d6SRWt356yEwEVe72VQRm9KMdbpJAm5Ew6F4TiSP31FhD9c/UIQUhpBBXZCztxCRa7gLBQ8swwt3RN/vOvNSKwhIaYM+vPZLn09twb0ksJ2QqWY1u8pf/TVbgYXsLJ6ykvVNhP0OSlv7uehTpMLEqstUGQnY/TE704bqiCKYL3ddf+DSZdt7DY8EUp/fxUCLAp3auMu7EZJIr5FXwWKxn+IjxiII9rlAb2SC8zO1FexE4c7b8DLQvebl0q05kZUB8CI68MhsactVKrJRanXcYRilfd7VA100hYW0= moji@DESKTOP-B56ER7Q"
 
 
