@@ -1,65 +1,17 @@
-pipeline {
-    agent any
-    environment {
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION = "us-east-1"
+stages {
+    stage('Checkout SCM') {
+        steps {
+            script {
+                checkout scmGit(
+                    branches: [[name: 'moji/branch']],
+                    extensions: [],
+                    userRemoteConfigs: [[
+                        url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git',
+                        credentialsId: 'github-credentials' // <-- Add this line
+                    ]]
+                )
+            }
+        }
     }
-    stages {
-        stage('Checkout SCM') {
-            steps {
-                script {
-                    checkout scmGit(
-                        branches: [[name: 'moji/branch']],
-                        extensions: [],
-                        userRemoteConfigs: [[url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git']]
-                    )
-                }
-            }
-        }
-        stage('Terraform Init') {
-            steps {
-                dir('terraform') {
-                    sh 'terraform init'
-                }
-            }
-        }
-        stage('Initializing Terraform for EKS') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform init'
-                }
-            }
-        }
-        stage('Formatting Terraform Code') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform fmt'
-                }
-            }
-        }
-        stage('Validating Terraform') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform validate'
-                }
-            }
-        }
-        stage('Previewing the Infra using Terraform') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform plan'
-                }
-                input(message: "Are you sure to proceed?", ok: "Proceed")
-            }
-        }
-        stage('Applying Terraform') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform apply -auto-approve'
-                }
-            }
-        }
-        // Add more stages as needed, always using dir('terraform/eks') for commands in that folder
-    }
+    // ... other stages ...
 }
