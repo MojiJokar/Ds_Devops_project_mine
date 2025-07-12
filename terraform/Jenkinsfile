@@ -18,15 +18,7 @@ pipeline {
     stages {
         stage('Checkout SCM') {
             steps {
-                script {
-                    checkout scmGit(
-                        branches: [[name: 'moji/branch']],
-                        extensions: [],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git'
-                        ]]
-                    )
-                }
+                git branch: 'moji/branch', url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git'
             }
         }
 
@@ -107,10 +99,7 @@ pipeline {
             when {
                 allOf {
                     expression { params.ACTION == 'apply' }
-                    expression {
-                        // Only run if the deployment YAMLs exist
-                        fileExists('terraform/eks/ConfigurationFiles/deployment.yaml')
-                    }
+                    expression { fileExists('terraform/eks/ConfigurationFiles/deployment.yaml') }
                 }
             }
             steps {
@@ -121,4 +110,10 @@ pipeline {
                             returnStdout: true
                         ).trim()
                         sh "aws eks update-kubeconfig --region eu-west-3 --name ${clusterName}"
-                        sh 'kubectl apply -f deployment
+                        sh 'kubectl apply -f deployment.yaml'
+                    }
+                }
+            }
+        }
+    }
+}
