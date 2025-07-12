@@ -18,3 +18,7 @@ output "private_subnet_ids" {
 #   description = "URLs of the ECR repositories"
 #   value       = module.ecr.repository_urls
 # }
+output "cluster_name" {
+  value       = module.eks.cluster_name
+  description = "The name of the EKS cluster"
+}
