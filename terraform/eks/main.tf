@@ -62,8 +62,15 @@ module "eks" {
       min_size     = 1
       max_size     = 3
       desired_size = 2
-
       instance_types = ["t2.small"]
+    }
+  }
+
+  access_entries = {
+    admin_user = {
+      kubernetes_groups = ["system:masters"]
+      principal_arn     = "arn:aws:iam::962480255828:user/student15-apr-2025-fastapi"
+      policy_associations = []
     }
   }
 
@@ -72,6 +79,7 @@ module "eks" {
     Terraform   = "true"
   }
 }
+
 
 # Data source for availability zones
 data "aws_availability_zones" "azs" {}
