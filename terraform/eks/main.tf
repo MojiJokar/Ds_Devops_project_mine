@@ -35,13 +35,13 @@ output "node_group_role_arn" {
   value = module.eks.node_group_role_arn
 }*/
 
-provider "aws" {
+/*provider "aws" {
   region                   = var.aws_region
   shared_credentials_files = ["/mnt/c/Users/mmb20/.aws/credentials"]
   default_tags {
     tags = var.default_tags
   }
-}
+}*/
 
 /*module "networking" {
   source = "../modules/networking"
@@ -73,6 +73,19 @@ module "jenkins" {
   user_data_install_jenkins = file("../modules/jenkins-runner-script/jenkins-install.sh")
 
 }*/
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+
+
+
+
 module "vpc" {
   source = "terraform-aws-modules/vpc/aws"
 
