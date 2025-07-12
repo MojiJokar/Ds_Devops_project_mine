@@ -9,6 +9,16 @@ provider "aws" {
   }
 }
 
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+
 
 # Networking Module - Creates VPC, Subnets, Internet Gateway, NAT Gateway, Route Tables
 module "networking" {
