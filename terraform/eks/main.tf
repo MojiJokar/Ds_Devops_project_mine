@@ -1,110 +1,89 @@
-pipeline {
-    agent any
-    environment {
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
-        AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION = "eu-west-3"
+terraform {
+  required_version = ">= 1.3.2"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
     }
-    parameters {
-        choice(
-            name: 'ACTION',
-            choices: ['apply', 'destroy'],
-            description: 'Terraform action to perform'
-        )
-    }
-    stages {
-        stage('Checkout SCM') {
-            steps {
-                script {
-                    checkout scmGit(
-                        branches: [[name: 'moji/branch']],
-                        extensions: [],
-                        userRemoteConfigs: [[
-                            url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git'
-                            // credentialsId: 'github-credentials' // Uncomment if you add credentials
-                        ]]
-                    )
-                }
-            }
-        }
-        stage('Terraform Init') {
-            steps {
-                dir('terraform') {
-                    sh 'terraform init'
-                }
-            }
-        }
-        stage('Terraform Plan') {
-            steps {
-                dir('terraform') {
-                    sh 'terraform plan'
-                }
-            }
-        }
-        stage('Initializing Terraform for EKS') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform init'
-                }
-            }
-        }
-        stage('Formatting Terraform Code') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform fmt'
-                }
-            }
-        }
-        stage('Validating Terraform') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform validate'
-                }
-            }
-        }
-        stage('Previewing the Infra using Terraform') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform plan'
-                }
-                input(message: "Are you sure to proceed?", ok: "Proceed")
-            }
-        }
-        stage('Creating/Destroying an EKS Cluster') {
-            steps {
-                dir('terraform/eks') {
-                    sh "terraform ${params.ACTION} --auto-approve"
-                }
-            }
-        }
-        stage('Check EKS Cluster Status') {
-            steps {
-                script {
-                    def status = sh(
-                        script: """
-                            aws eks describe-cluster --region eu-west-3 --name my-eks-cluster --query 'cluster.status' --output text || echo 'NOT_FOUND'
-                        """,
-                        returnStdout: true
-                    ).trim()
-                    echo "EKS Cluster status: ${status}"
-                    if (status == 'NOT_FOUND') {
-                        error("EKS cluster does not exist or is not accessible.")
-                    }
-                }
-            }
-        }
-        stage('Deploying Nginx Application') {
-            when {
-                expression { params.ACTION == 'apply' }
-            }
-            steps {
-                dir('terraform/eks/ConfigurationFiles') {
-                    sh 'aws eks update-kubeconfig --region eu-west-3 --name my-eks-cluster'
-                    sh 'kubectl apply -f deployment.yaml'
-                    sh 'kubectl apply -f service.yaml'
-                }
-            }
-        }
-        // Add more stages as needed
-    }
+  }
 }
+
+provider "aws" {
+  region = "eu-west-3"
+}
+
+# VPC Module
+module "vpc" {
+  source  = "terraform-aws-modules/vpc/aws"
+  version = "~> 5.0"
+
+  name = "jenkins-vpc"
+  cidr = var.vpc_cidr
+
+  azs             = data.aws_availability_zones.azs.names
+  private_subnets = var.private_subnets
+  public_subnets  = var.public_subnets
+
+  enable_dns_hostnames = true
+  enable_nat_gateway   = true
+  single_nat_gateway   = true
+
+  tags = {
+    "kubernetes.io/cluster/my-eks-cluster" = "shared"
+  }
+
+  public_subnet_tags = {
+    "kubernetes.io/cluster/my-eks-cluster" = "shared"
+    "kubernetes.io/role/elb"               = 1
+  }
+
+  private_subnet_tags = {
+    "kubernetes.io/cluster/my-eks-cluster" = "shared"
+    "kubernetes.io/role/internal-elb"      = 1
+  }
+}
+
+# EKS Module
+module "eks" {
+  source  = "terraform-aws-modules/eks/aws"
+  version = "~> 20.0"
+
+  cluster_name    = "my-eks-cluster"
+  cluster_version = "1.31" 
+
+  cluster_endpoint_public_access = true
+
+  vpc_id     = module.vpc.vpc_id
+  subnet_ids = module.vpc.private_subnets
+
+  eks_managed_node_groups = {
+    nodes = {
+      min_size     = 1
+      max_size     = 3
+      desired_size = 2
+
+      instance_types = ["t2.small"]
+    }
+  }
+
+  tags = {
+    Environment = "dev"
+    Terraform   = "true"
+  }
+}
+
+# Data source for availability zones
+data "aws_availability_zones" "azs" {}
+
+# Variables (define these in variables.tf or here for quick testing)
+variable "vpc_cidr" {
+  default = "10.0.0.0/16"
+}
+variable "private_subnets" {
+  default = ["10.0.1.0/24", "10.0.2.0/24"]
+}
+variable "public_subnets" {
+  default = ["10.0.101.0/24", "10.0.102.0/24"]
+}
+
