@@ -4,6 +4,6 @@ terraform {
     key            = "eks/terraform.tfstate"
     region         = "eu-west-3"
     encrypt        = true
-    dynamodb_table = "terraform_locks"  # Make sure this DynamoDB table exists
+    #  dynamodb_table = "terraform_locks"  # Make sure this DynamoDB table exists
   }
 }
