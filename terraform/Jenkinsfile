@@ -1,17 +1,20 @@
 pipeline {
     agent any
+
     environment {
-        AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
+        AWS_ACCESS_KEY_ID     = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION = "eu-west-3"
+        AWS_DEFAULT_REGION    = "eu-west-3"
     }
+
     parameters {
         choice(
             name: 'ACTION',
             choices: ['apply', 'destroy'],
-            description: 'Terraform action to perform'
+            description: 'Terraform action to perform (apply = create/update, destroy = delete)'
         )
     }
+
     stages {
         stage('Checkout SCM') {
             steps {
@@ -21,68 +24,74 @@ pipeline {
                         extensions: [],
                         userRemoteConfigs: [[
                             url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git'
-                            // credentialsId: 'github-credentials' // Uncomment if you add credentials
                         ]]
                     )
                 }
             }
         }
-        stage('Terraform Init') {
+
+        stage('Terraform Init for EKS') {
             steps {
-                dir('terraform') {
+                dir('terraform/eks') {
                     sh 'terraform init -reconfigure'
                 }
             }
         }
-        stage('Terraform Plan') {
-            steps {
-                dir('terraform') {
-                    sh 'terraform plan'
-                }
-            }
-        }
-        stage('Initializing Terraform for EKS') {
+
+        stage('Format Terraform Code') {
             steps {
                 dir('terraform/eks') {
-                    sh 'terraform init'
+                    sh 'terraform fmt -check'
                 }
             }
         }
-        stage('Formatting Terraform Code') {
-            steps {
-                dir('terraform/eks') {
-                    sh 'terraform fmt'
-                }
-            }
-        }
-        stage('Validating Terraform') {
+
+        stage('Validate Terraform Code') {
             steps {
                 dir('terraform/eks') {
                     sh 'terraform validate'
                 }
             }
         }
-        stage('Previewing the Infra using Terraform') {
+
+        stage('Plan Terraform Changes') {
             steps {
                 dir('terraform/eks') {
                     sh 'terraform plan'
                 }
-                input(message: "Are you sure to proceed?", ok: "Proceed")
             }
         }
-        stage('Creating/Destroying an EKS Cluster') {
+
+        stage('Manual Approval') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
+            steps {
+                input(message: "Proceed with Terraform ${params.ACTION}?", ok: "Yes, proceed")
+            }
+        }
+
+        stage('Apply/Destroy EKS Cluster') {
             steps {
                 dir('terraform/eks') {
                     sh "terraform ${params.ACTION} --auto-approve"
                 }
             }
         }
+
         stage('Check EKS Cluster Status') {
+            when {
+                expression { params.ACTION == 'apply' }
+            }
             steps {
                 script {
+                    def clusterName = sh(
+                        script: "terraform -chdir=terraform/eks output -raw cluster_name",
+                        returnStdout: true
+                    ).trim()
                     def status = sh(
                         script: """
-                            aws eks describe-cluster --region eu-west-3 --name my-eks-cluster --query 'cluster.status' --output text || echo 'NOT_FOUND'
+                            aws eks describe-cluster --region eu-west-3 --name ${clusterName} --query 'cluster.status' --output text || echo 'NOT_FOUND'
                         """,
                         returnStdout: true
                     ).trim()
@@ -93,18 +102,23 @@ pipeline {
                 }
             }
         }
-        stage('Deploying Nginx Application') {
+
+        stage('Deploy to EKS (Nginx Example)') {
             when {
-                expression { params.ACTION == 'apply' }
+                allOf {
+                    expression { params.ACTION == 'apply' }
+                    expression {
+                        // Only run if the deployment YAMLs exist
+                        fileExists('terraform/eks/ConfigurationFiles/deployment.yaml')
+                    }
+                }
             }
             steps {
                 dir('terraform/eks/ConfigurationFiles') {
-                    sh 'aws eks update-kubeconfig --region eu-west-3 --name my-eks-cluster'
-                    sh 'kubectl apply -f deployment.yaml'
-                    sh 'kubectl apply -f service.yaml'
-                }
-            }
-        }
-        // Add more stages as needed
-    }
-}
+                    script {
+                        def clusterName = sh(
+                            script: "terraform -chdir=../ output -raw cluster_name",
+                            returnStdout: true
+                        ).trim()
+                        sh "aws eks update-kubeconfig --region eu-west-3 --name ${clusterName}"
+                        sh 'kubectl apply -f deployment
