@@ -53,6 +53,13 @@ pipeline {
                 input(message: "Are you sure to proceed?", ok: "Proceed")
             }
         }
+        stage('Applying Terraform') {
+            steps {
+                dir('terraform/eks') {
+                    sh 'terraform apply -auto-approve'
+                }
+            }
+        }
         // Add more stages as needed, always using dir('terraform/eks') for commands in that folder
     }
 }
