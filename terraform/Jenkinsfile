@@ -9,9 +9,8 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 script {
-                    // Make sure your branch name is correct!
                     checkout scmGit(
-                        branches: [[name: 'moji/branch/terraform']],
+                        branches: [[name: 'moji/branch']],
                         extensions: [],
                         userRemoteConfigs: [[url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git']]
                     )
@@ -25,6 +24,35 @@ pipeline {
                 }
             }
         }
-        // Add more stages as needed, always using dir('terraform') for commands in that folder
+        stage('Initializing Terraform for EKS') {
+            steps {
+                dir('terraform/eks') {
+                    sh 'terraform init'
+                }
+            }
+        }
+        stage('Formatting Terraform Code') {
+            steps {
+                dir('terraform/eks') {
+                    sh 'terraform fmt'
+                }
+            }
+        }
+        stage('Validating Terraform') {
+            steps {
+                dir('terraform/eks') {
+                    sh 'terraform validate'
+                }
+            }
+        }
+        stage('Previewing the Infra using Terraform') {
+            steps {
+                dir('terraform/eks') {
+                    sh 'terraform plan'
+                }
+                input(message: "Are you sure to proceed?", ok: "Proceed")
+            }
+        }
+        // Add more stages as needed, always using dir('terraform/eks') for commands in that folder
     }
 }
