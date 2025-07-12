@@ -1,32 +1,30 @@
-#!/usr/bin/env groovy
 pipeline {
     agent any
     environment {
         AWS_ACCESS_KEY_ID = credentials('AWS_ACCESS_KEY_ID')
         AWS_SECRET_ACCESS_KEY = credentials('AWS_SECRET_ACCESS_KEY')
-        AWS_DEFAULT_REGION = "eu-west-3"
+        AWS_DEFAULT_REGION = "us-east-1"
     }
     stages {
-        stage("Create an EKS Cluster") {
+        stage('Checkout SCM') {
             steps {
                 script {
-                    dir('eks') {
-                        sh "terraform init"
-                        sh "terraform apply -auto-approve"
-                    }
+                    // Make sure your branch name is correct!
+                    checkout scmGit(
+                        branches: [[name: 'moji/branch/terraform']],
+                        extensions: [],
+                        userRemoteConfigs: [[url: 'https://github.com/MojiJokar/Ds_Devops_project_mine.git']]
+                    )
                 }
             }
         }
-        stage("Deploy to EKS") {
+        stage('Terraform Init') {
             steps {
-                script {
-                    dir('kubernetes') {
-                        sh "aws eks update-kubeconfig --name Ds_devops_project_app"
-                        sh "kubectl apply -f nginx-deployment.yaml"
-                        sh "kubectl apply -f nginx-service.yaml"
-                    }
+                dir('terraform') {
+                    sh 'terraform init'
                 }
             }
         }
+        // Add more stages as needed, always using dir('terraform') for commands in that folder
     }
 }
