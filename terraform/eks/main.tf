@@ -68,9 +68,17 @@ module "eks" {
 
   access_entries = {
     admin_user = {
-      kubernetes_groups = ["system:masters"]
-      principal_arn     = "arn:aws:iam::962480255828:user/student15-apr-2025-fastapi"
-      policy_associations = []
+      principal_arn = "arn:aws:iam::962480255828:user/student15-apr-2025-fastapi"
+
+      # This is the new way to grant admin access
+      policy_associations = {
+        admin = {
+          policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
+          access_scope = {
+            type = "cluster"
+          }
+        }
+      }
     }
   }
 
