@@ -70,7 +70,6 @@ module "eks" {
     admin_user = {
       principal_arn = "arn:aws:iam::962480255828:user/student15-apr-2025-fastapi"
 
-      # This is the new way to grant admin access
       policy_associations = {
         admin = {
           policy_arn = "arn:aws:eks::aws:cluster-access-policy/AmazonEKSAdminPolicy"
@@ -87,6 +86,7 @@ module "eks" {
     Terraform   = "true"
   }
 }
+
 
 
 # Data source for availability zones
