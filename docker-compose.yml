@@ -3,7 +3,7 @@ version: '3.8'
 services:
   web:
     build: .
-    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uvicorn app.main:app --host 0.0.0.0'
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload'
     volumes:
       - .:/app
     expose:
@@ -15,6 +15,8 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.fastapi.rule=Host(`fastapi.localhost`)"
+      - "traefik.http.services.fastapi.loadbalancer.server.port=8000"
+
   db:
     image: postgres:15-alpine
     volumes:
@@ -25,14 +27,15 @@ services:
       - POSTGRES_USER=fastapi_traefik
       - POSTGRES_PASSWORD=fastapi_traefik
       - POSTGRES_DB=fastapi_traefik
+
   traefik:
     image: traefik:v2.9.6
     ports:
-      - 8008:80
-      - 8081:8080
+      - "8008:80"      # Access your app at http://fastapi.localhost:8008
+      - "8081:8080"    # Traefik dashboard at http://localhost:8081
     volumes:
-      - "./traefik.dev.toml:/etc/traefik/traefik.toml"
-      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - ./traefik.dev.toml:/etc/traefik/traefik.toml
+      - /var/run/docker.sock:/var/run/docker.sock:ro
 
 volumes:
   postgres_data:

@@ -2,7 +2,8 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/datadog/datadog" {
-  version = "3.67.0"
+  version     = "3.67.0"
+  constraints = ">= 3.0.0"
   hashes = [
     "h1:3npfjlUQAliMbt4EFVv4GnW3n9oQEDvV0D//012+iDI=",
     "zh:151d9750e105eaac91ee9c7d0278c1459d125a92beecfb19793db2a20620f688",
@@ -23,7 +24,8 @@ provider "registry.terraform.io/datadog/datadog" {
 }
 
 provider "registry.terraform.io/hashicorp/helm" {
-  version = "3.0.2"
+  version     = "3.0.2"
+  constraints = ">= 3.0.2"
   hashes = [
     "h1:+tHGl509bhyUrvvj9GQTBsdK+ImHJnRuo6ppDZPavqY=",
     "zh:2778de76c7dfb2e85c75fe6de3c11172a25551ed499bfb9e9f940a5be81167b0",
@@ -42,7 +44,8 @@ provider "registry.terraform.io/hashicorp/helm" {
 }
 
 provider "registry.terraform.io/hashicorp/kubernetes" {
-  version = "2.37.1"
+  version     = "2.37.1"
+  constraints = ">= 2.26.0"
   hashes = [
     "h1:qo9Ue/rIEnvxOpiK9qizwRFV7rvb5gCziKVytIcZHyk=",
     "zh:0ed097413c7fc804479e325966886b405dc0b75ad2b4f54ce4df1d8e4802b397",
