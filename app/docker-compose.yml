@@ -6,14 +6,28 @@ services:
       context: ./frontend/scenario-tool-suite
       dockerfile: Dockerfile
     ports:
+<<<<<<< HEAD
+      - "3000:80"
+    environment:
+      - VITE_API_URL=/api
+=======
       - "3000:3000"
     environment:
       - REACT_APP_API_URL=http://localhost:8080
+>>>>>>> origin/main
     depends_on:
       - backend
     volumes:
       - ./frontend/scenario-tool-suite:/app
       - /app/node_modules
+<<<<<<< HEAD
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+=======
+>>>>>>> origin/main
 
   backend:
     build:
@@ -23,8 +37,23 @@ services:
       - "8080:8080"
     environment:
       - VALIDATOR_PATH=/app/OpenSCENARIOValidator
+<<<<<<< HEAD
+      - LD_LIBRARY_PATH=/usr/local/lib
+      - PORT=8080
+      - LOG_LEVEL=INFO
+    volumes:
+      # 使用相对路径，确保能找到validator
+      - ./backend/openscenario.api.test/cpp/build/cgReleaseMakeShared/applications/openScenarioReader/OpenScenarioReader:/app/OpenSCENARIOValidator
+      - ./backend/openscenario.api.test/cpp/build/cgReleaseMakeShared/applications/openScenarioReader/lib*.so*:/usr/local/lib/
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+=======
     volumes:
       # Mount the validator executable
       - ./path/to/OpenSCENARIO/validator:/app/OpenSCENARIOValidator
       # Mount the directory containing your OpenSCENARIO files if needed
       # - ./path/to/scenarios:/data/scenarios
+>>>>>>> origin/main
